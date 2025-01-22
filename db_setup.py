@@ -51,8 +51,7 @@ def create_database_and_user():
 def create_table():
     table_schema = """
     CREATE TABLE users (
-        user_id SERIAL PRIMARY KEY,
-        user_nickname TEXT NOT NULL,
+        user_id PRIMARY KEY,
         weight INTEGER NOT NULL,
         height INTEGER NOT NULL,
         age INTEGER NOT NULL,
@@ -60,9 +59,10 @@ def create_table():
         city TEXT NOT NULL,
         water_goal INTEGER NOT NULL,
         calorie_goal INTEGER NOT NULL,
-        logged_water INTEGER NOT NULL,
-        logged_calories INTEGER NOT NULL,
-        burned_calories INTEGER NOT NULL
+        logged_water INTEGER NOT NULL DEFAULT 0,
+        logged_calories INTEGER NOT NULL DEFAULT 0,
+        burned_calories INTEGER NOT NULL DEFAULT 0,
+        last_logged TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """
     try:
