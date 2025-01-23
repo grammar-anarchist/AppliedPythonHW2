@@ -1,28 +1,17 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:14
-    container_name: my_postgres
+    container_name: postgres_db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-    volumes:
-      - db_data:/var/lib/postgresql/data
     network_mode: host
 
   app:
     build: .
-    container_name: my_app
+    container_name: telegram_bot
     restart: always
-    depends_on:
-      - db
-    volumes:
-      - app_data:/app
-    tty: true
     network_mode: host
-
-volumes:
-  db_data:
-  app_data:
+    volumes:
+      - .:/app
