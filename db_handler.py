@@ -6,9 +6,9 @@ import asyncpg
 from api_requests import water_goal_func, calories_goal_func
 
 DB_CONFIG = {
-    'database': 'mailing_db',
-    'user': 'bot_user',
-    'password': 'bot_password',
+    'database': 'calories_db',
+    'user': 'postgres',
+    'password': 'password',
     'host': 'localhost',
     'port': '5432'
 }
@@ -58,7 +58,7 @@ class Session:
                     SET {columns},
                         last_logged = CURRENT_TIMESTAMP
                     WHERE user_id = $1
-                """.format(columns=', '.join(f"{key} = $2" for key in columns)),
+                """.format(columns=', '.join(f"{key} = ${i + 2}" for i, key in enumerate(columns))),
                 user_id, *columns.values()
             )
     
@@ -76,20 +76,23 @@ class Session:
             user_id, weight, height, age, activity, city, water_goal, calorie_goal
             )
 
-    async def add_user(self, user_id: int, weight: int, height: int, age: int, activity: int, city: str, water_goal: int, calorie_goal: int):
+    async def add_user(self, user_id: int, weight: int, height: int, 
+                       age: int, activity: int, city: str,
+                       water_goal: int, calories_goal: int
+        ):
         user_exists = await self.check_user(user_id)
 
         if user_exists:
             await self.update_columns(user_id, 
                 {'weight': weight, 'height': height, 'age': age, 
                 'activity': activity, 'city': city, 
-                'calorie_goal': calorie_goal, 'water_goal': water_goal,
+                'calorie_goal': calories_goal, 'water_goal': water_goal,
                 'logged_water': 0, 'logged_calories': 0, 'burned_calories': 0}
             )
             
         else:
             await self.create_user(
-                user_id, weight, height, age, activity, city, water_goal, calorie_goal
+                user_id, weight, height, age, activity, city, water_goal, calories_goal
             )
     
     async def update_water_goal(self, user_id: int):

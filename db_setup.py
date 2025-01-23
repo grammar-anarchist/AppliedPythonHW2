@@ -30,18 +30,6 @@ def create_database_and_user():
         cursor.execute(f"CREATE DATABASE {DB_NAME};")
         print(f"Database '{DB_NAME}' created successfully.")
 
-        cursor.execute(f"""
-        DO $$ BEGIN
-            IF NOT EXISTS (
-                SELECT FROM pg_catalog.pg_roles WHERE rolname = 'calorie_user'
-            ) THEN
-                CREATE USER calorie_user WITH PASSWORD 'calorie_pass';
-            END IF;
-        END $$;
-        GRANT ALL PRIVILEGES ON DATABASE {DB_NAME} TO calorie_user;
-        """)
-        print("User 'calorie_user' created and granted privileges.")
-
     except psycopg2.Error as e:
         print(f"Error occurred: {e}")
     finally:
@@ -51,7 +39,7 @@ def create_database_and_user():
 def create_table():
     table_schema = """
     CREATE TABLE users (
-        user_id PRIMARY KEY,
+        user_id INTEGER PRIMARY KEY,
         weight INTEGER NOT NULL,
         height INTEGER NOT NULL,
         age INTEGER NOT NULL,

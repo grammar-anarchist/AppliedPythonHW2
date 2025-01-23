@@ -1,4 +1,4 @@
-import aiohttp
+import httpx
 
 from config import openweather_api_key, nutrition_api_key, nutrition_api_id
 
@@ -7,9 +7,11 @@ openweather_url = "https://api.openweathermap.org/data/2.5/weather?q={}&appid={}
 async def curr_temperature(city_name, api_key=openweather_api_key): 
     try:       
         request_url = openweather_url.format(city_name, api_key)
-        response = await aiohttp.get(request_url)
-        response.raise_for_status()
-        data = response.json()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(request_url)
+            response.raise_for_status()
+            data = response.json() 
+
         return data['main']['temp']
     
     except:
@@ -26,11 +28,13 @@ async def product_calories(product, api_key=nutrition_api_key, api_id=nutrition_
             "Content-Type": "application/json"
         }
         data = {"query": product}
-        response = await aiohttp.post(request_url, headers=headers, json=data)
-        response.raise_for_status()
-        result = response.json()
-        serving_size = result['foods'][0]['serving_weight_grams']
-        calories = result['foods'][0]['nf_calories']
+        async with httpx.AsyncClient() as client:
+            response = await client.post(request_url, headers=headers, json=data)
+            response.raise_for_status()
+            data = response.json()
+
+        serving_size = data['foods'][0]['serving_weight_grams']
+        calories = data['foods'][0]['nf_calories']
         return int(calories * 100 / serving_size)
     
     except:

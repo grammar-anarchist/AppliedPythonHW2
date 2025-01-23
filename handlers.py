@@ -59,14 +59,14 @@ async def process_city(message: Message, state: FSMContext):
     data = await state.get_data()
     calories_goal = await calories_goal_func(data['weight'], data['height'], data['age'])
     water_goal = await water_goal_func(data['weight'], data['city'])
-    db.add_user(message.from_user.id, **data, water_goal=water_goal, calories_goal=calories_goal)
+    await db.add_user(message.from_user.id, **data, water_goal=water_goal, calories_goal=calories_goal)
     await state.clear()
     await message.reply(constants['REGISTRATION_SUCCESS'].format(calories=calories_goal, water=water_goal))
 
 @router.message(Command("log_water"))
 async def log_water(message: Message):
     try:
-        args = message.text.split(maxsplit=1)
+        args = message.text.split()
         assert len(args) == 2
         water = int(args[1])
     except:
@@ -74,7 +74,7 @@ async def log_water(message: Message):
         return
 
     try:
-        remaining = db.add_water(message.from_user.id, water)
+        remaining = await db.add_water(message.from_user.id, water)
     except:
         await message.reply(constants['DATABASE_ERROR'])
         return
@@ -84,14 +84,17 @@ async def log_water(message: Message):
 @router.message(Command("log_food"))
 async def log_food(message: Message, state: FSMContext):
     try:
-        args = message.text.split(maxsplit=1)
+        args = message.text.split()
         assert len(args) == 2
+        product = args[1]
     except:
         await message.reply(constants['LOG_FOOD_ERROR'])
         return
 
     try:
-        calories = await product_calories(args[1])
+        calories = await product_calories(product)
+        if calories is None:
+            raise Exception
     except:
         await message.reply(constants['OPENFOOD_API_ERROR'])
         return
@@ -100,10 +103,10 @@ async def log_food(message: Message, state: FSMContext):
     await state.update_data(calories_per_100g=calories)
     await state.set_state(Food.food_weight)
     
-    await message.reply(constants['ASK_FOOD_WEIGHT'])
+    await message.reply(constants['ASK_FOOD_WEIGHT'].format(product=product, calories=calories))
 
 @router.message(Food.food_weight)
-async def process_calories_per_100g(message: Message, state: FSMContext):
+async def process_food_weight(message: Message, state: FSMContext):
     try:
         weight = int(message.text)
     except:
@@ -115,17 +118,17 @@ async def process_calories_per_100g(message: Message, state: FSMContext):
     await state.clear()
 
     try:
-        remaining = db.add_calories(message.from_user.id, calories)
+        remaining = await db.add_calories(message.from_user.id, calories)
     except:
         await message.reply(constants['DATABASE_ERROR'])
         return
 
     await message.reply(constants['FOOD_LOGGED'].format(amount=calories, remaining=remaining))
 
-@router.message(Command("/log_workout"))
+@router.message(Command("log_workout"))
 async def log_workout(message: Message):
     try:
-        args = message.text.split(maxsplit=1)
+        args = message.text.split()
         assert len(args) == 3
         time_spent = int(args[2])
     except:
@@ -137,18 +140,18 @@ async def log_workout(message: Message):
     water_increase = 200 * equivalent
 
     try:
-        db.log_training(message.from_user.id, water_increase, calories_spent)
+        await db.log_training(message.from_user.id, water_increase, calories_spent)
     except:
         await message.reply(constants['DATABASE_ERROR'])
         return
 
     await message.reply(constants['WORKOUT_LOGGED'].format(calories=calories_spent, water=water_increase))
 
-@router.message(Command("/check_progress"))
+@router.message(Command("check_progress"))
 async def check_progress(message: Message):
     try:
         calories_goal, calories_consumed, calories_burnt, water_goal, water_consumed = \
-            db.get_progress(message.from_user.id)
+            await db.get_progress(message.from_user.id)
     except:
         await message.reply(constants['DATABASE_ERROR'])
         return
@@ -157,7 +160,7 @@ async def check_progress(message: Message):
         calories_goal=calories_goal,
         calories_consumed=calories_consumed,
         calories_burnt=calories_burnt,
-        calories_left=calories_goal - calories_consumed + calories_burnt,
+        calories_left=calories_consumed - calories_burnt,
         water_goal=water_goal,
         water_consumed=water_consumed,
         water_left=water_goal - water_consumed
