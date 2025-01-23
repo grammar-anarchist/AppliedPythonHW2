@@ -10,6 +10,7 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - db_data:/var/lib/postgresql/data
+    network_mode: host
 
   app:
     build: .
@@ -20,6 +21,7 @@ services:
     volumes:
       - app_data:/app
     tty: true
+    network_mode: host
 
 volumes:
   db_data:
