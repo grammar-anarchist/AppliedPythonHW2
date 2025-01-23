@@ -7,13 +7,13 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     network_mode: host
+    volumes:
+      - db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
-    volumes:
-      - db_data:/var/lib/postgresql/data
 
   app:
     build: .
@@ -23,7 +23,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      POSTGRES_HOST: db
     volumes:
       - app_data:/app
+    environment:
+      POSTGRES_HOST: db
+    tty: true
+
+volumes:
+  db_data:
+  app_data:
