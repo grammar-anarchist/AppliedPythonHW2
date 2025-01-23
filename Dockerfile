@@ -2,7 +2,13 @@ FROM python:3.10
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y git postgresql-client && apt-get clean
+RUN apt-get update
+
+RUN apt-get install -y locales && \
+    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
+    locale-gen
+RUN apt-get install -y git postgresql-client 
+RUN apt-get clean
 
 COPY . .
 
