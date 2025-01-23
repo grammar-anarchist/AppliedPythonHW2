@@ -10,4 +10,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 RUN chmod +x /app/entrypoint.sh
 
+ENV PYTHONUNBUFFERED=1
+
 CMD ["sh", "/app/entrypoint.sh"]

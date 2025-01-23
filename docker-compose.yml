@@ -7,11 +7,21 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     network_mode: host
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   app:
     build: .
     container_name: telegram_bot
     restart: always
     network_mode: host
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: db
     volumes:
       - .:/app
